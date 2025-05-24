@@ -15,6 +15,10 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.filled.List
+import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CircularProgressIndicator
@@ -22,6 +26,8 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.NavigationBar
+import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
@@ -34,6 +40,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import androidx.navigation.NavType
@@ -48,11 +55,11 @@ import kotlinx.coroutines.withContext
 import java.net.HttpURLConnection
 import java.net.URL
 
-sealed class Screen(val route: String, val title: String) {
-    object MainScreen : Screen("main_screen", "Main")
-    object DetailScreen : Screen("detail_screen", "Detail")
-    object DetailScreen2 : Screen("detail_screen2", "Detail 2")
-    object DetailScreen3 : Screen("detail_screen3", "Detail 3")
+sealed class Screen(val route: String, val title: String, val icon: ImageVector) {
+    object MainScreen : Screen("main_screen", "Main", Icons.Filled.Home)
+    object DetailScreen : Screen("detail_screen", "Detail", Icons.Filled.Info)
+    object DetailScreen2 : Screen("detail_screen2", "Detail 2", Icons.Filled.List)
+    object DetailScreen3 : Screen("detail_screen3", "Detail 3", Icons.Filled.Star)
 }
 
 class MainActivity : ComponentActivity() {
@@ -85,6 +92,12 @@ fun Navigation() {
 
     val canNavigateBack = navController.previousBackStackEntry != null
 
+    val bottomNavItems = listOf(
+        Screen.MainScreen,
+        Screen.DetailScreen2,
+        Screen.DetailScreen3
+    )
+
     Scaffold(
         modifier = Modifier.fillMaxSize(),
         topBar = {
@@ -101,6 +114,54 @@ fun Navigation() {
                     }
                 }
             )
+        },
+        bottomBar = {
+            NavigationBar {
+                bottomNavItems.forEach { screen ->
+                    NavigationBarItem(
+                        icon = {
+                            Icon(
+                                imageVector = screen.icon,
+                                contentDescription = screen.title
+                            )
+                        },
+                        label = { Text(screen.title) },
+                        selected = currentScreen.route == screen.route ||
+                                (screen == Screen.DetailScreen && currentRoute?.startsWith(Screen.DetailScreen.route) == true),
+                        onClick = {
+                            if (screen == Screen.DetailScreen) {
+                                // Navigate to DetailScreen with default parameter
+                                navController.navigate(Screen.DetailScreen.route + "/DefaultUser") {
+                                    popUpTo(Screen.MainScreen.route)
+                                    launchSingleTop = true
+                                }
+                            } else {
+                                navController.navigate(screen.route) {
+                                    popUpTo(Screen.MainScreen.route)
+                                    launchSingleTop = true
+                                }
+                            }
+                        }
+                    )
+                }
+                // Add DetailScreen as a separate item
+                NavigationBarItem(
+                    icon = {
+                        Icon(
+                            imageVector = Screen.DetailScreen.icon,
+                            contentDescription = Screen.DetailScreen.title
+                        )
+                    },
+                    label = { Text(Screen.DetailScreen.title) },
+                    selected = currentRoute?.startsWith(Screen.DetailScreen.route) == true,
+                    onClick = {
+                        navController.navigate(Screen.DetailScreen.route + "/DefaultUser") {
+                            popUpTo(Screen.MainScreen.route)
+                            launchSingleTop = true
+                        }
+                    }
+                )
+            }
         }
     ) { innerPadding ->
         NavHost(
