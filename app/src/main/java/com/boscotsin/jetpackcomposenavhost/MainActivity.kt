@@ -174,6 +174,7 @@ fun Navigation() {
                         }
                     )
                 }
+                /*
                 // Add DetailScreen as a separate item
                 NavigationBarItem(
                     icon = {
@@ -191,6 +192,7 @@ fun Navigation() {
                         }
                     }
                 )
+                */
             }
         }
     ) { innerPadding ->
