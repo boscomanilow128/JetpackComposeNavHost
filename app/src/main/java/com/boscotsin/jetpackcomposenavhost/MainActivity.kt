@@ -4,6 +4,7 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -13,9 +14,12 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -25,19 +29,23 @@ import androidx.compose.material.icons.filled.List
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.filled.ThumbUp
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextField
 import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -46,9 +54,12 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import androidx.navigation.NavType
@@ -114,7 +125,6 @@ fun Navigation() {
         currentRoute == Screen.DetailScreen2.route -> Screen.DetailScreen2
         currentRoute == Screen.DetailScreen3.route -> Screen.DetailScreen3
         currentRoute == Screen.DetailScreen4.route -> Screen.DetailScreen4
-        //We might have arguments for the route hence "startWith".
         currentRoute?.startsWith(Screen.DetailScreen.route) == true -> Screen.DetailScreen
         else -> Screen.MainScreen
     }
@@ -132,7 +142,12 @@ fun Navigation() {
         modifier = Modifier.fillMaxSize(),
         topBar = {
             TopAppBar(
-                title = { Text(currentScreen.title) },
+                title = {
+                    Text(
+                        text = currentScreen.title,
+                        fontWeight = FontWeight.Bold
+                    )
+                },
                 navigationIcon = {
                     if (canNavigateBack) {
                         IconButton(onClick = { navController.popBackStack() }) {
@@ -142,11 +157,17 @@ fun Navigation() {
                             )
                         }
                     }
-                }
+                },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.primaryContainer,
+                    titleContentColor = MaterialTheme.colorScheme.onPrimaryContainer
+                )
             )
         },
         bottomBar = {
-            NavigationBar {
+            NavigationBar(
+                containerColor = MaterialTheme.colorScheme.surfaceContainer
+            ) {
                 bottomNavItems.forEach { screen ->
                     NavigationBarItem(
                         icon = {
@@ -160,7 +181,6 @@ fun Navigation() {
                                 (screen == Screen.DetailScreen && currentRoute?.startsWith(Screen.DetailScreen.route) == true),
                         onClick = {
                             if (screen == Screen.DetailScreen) {
-                                // Navigate to DetailScreen with default parameter
                                 navController.navigate(Screen.DetailScreen.route + "/DefaultUser") {
                                     popUpTo(Screen.MainScreen.route)
                                     launchSingleTop = true
@@ -174,59 +194,53 @@ fun Navigation() {
                         }
                     )
                 }
-                /*
-                // Add DetailScreen as a separate item
-                NavigationBarItem(
-                    icon = {
-                        Icon(
-                            imageVector = Screen.DetailScreen.icon,
-                            contentDescription = Screen.DetailScreen.title
-                        )
-                    },
-                    label = { Text(Screen.DetailScreen.title) },
-                    selected = currentRoute?.startsWith(Screen.DetailScreen.route) == true,
-                    onClick = {
-                        navController.navigate(Screen.DetailScreen.route + "/DefaultUser") {
-                            popUpTo(Screen.MainScreen.route)
-                            launchSingleTop = true
-                        }
-                    }
-                )
-                */
             }
         }
     ) { innerPadding ->
-        NavHost(
-            navController = navController,
-            startDestination = Screen.MainScreen.route,
-            modifier = Modifier.padding(innerPadding)
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(
+                    Brush.verticalGradient(
+                        colors = listOf(
+                            MaterialTheme.colorScheme.background,
+                            MaterialTheme.colorScheme.surface.copy(alpha = 0.8f)
+                        )
+                    )
+                )
         ) {
-            composable(route = Screen.MainScreen.route) {
-                MainScreen(navController = navController)
-            }
-            composable(
-                route = Screen.DetailScreen.route + "/{name}",
-                arguments = listOf(
-                    navArgument("name") {
-                        type = NavType.StringType
-                        defaultValue = "Bosco"
-                        nullable = true
-                    }
-                )
+            NavHost(
+                navController = navController,
+                startDestination = Screen.MainScreen.route,
+                modifier = Modifier.padding(innerPadding)
             ) {
-                DetailScreen(
-                    name = it.arguments?.getString("name"),
-                    navController = navController
-                )
-            }
-            composable(route = Screen.DetailScreen2.route) {
-                DetailScreen2(navController = navController)
-            }
-            composable(route = Screen.DetailScreen3.route) {
-                DetailScreen3(navController = navController)
-            }
-            composable(route = Screen.DetailScreen4.route) {
-                DetailScreen4(navController = navController)
+                composable(route = Screen.MainScreen.route) {
+                    MainScreen(navController = navController)
+                }
+                composable(
+                    route = Screen.DetailScreen.route + "/{name}",
+                    arguments = listOf(
+                        navArgument("name") {
+                            type = NavType.StringType
+                            defaultValue = "Bosco"
+                            nullable = true
+                        }
+                    )
+                ) {
+                    DetailScreen(
+                        name = it.arguments?.getString("name"),
+                        navController = navController
+                    )
+                }
+                composable(route = Screen.DetailScreen2.route) {
+                    DetailScreen2(navController = navController)
+                }
+                composable(route = Screen.DetailScreen3.route) {
+                    DetailScreen3(navController = navController)
+                }
+                composable(route = Screen.DetailScreen4.route) {
+                    DetailScreen4(navController = navController)
+                }
             }
         }
     }
@@ -234,84 +248,174 @@ fun Navigation() {
 
 @Composable
 fun MainScreen(navController: NavController) {
-    var text by remember {
-        mutableStateOf("")
-    }
-    Column (
-        verticalArrangement = Arrangement.Center,
+    var text by remember { mutableStateOf("") }
+
+    Box(
         modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 50.dp)
+            .fillMaxSize()
+            .padding(24.dp)
     ) {
-        TextField(
-            value = text,
-            onValueChange = {
-                text = it
-            },
-            modifier = Modifier.fillMaxWidth()
-        )
-        Spacer(
-            modifier = Modifier.padding(8.dp)
-        )
-        Button(
-            modifier = Modifier.align(Alignment.End),
-            onClick = {
-                navController.navigate(Screen.DetailScreen.route + "/$text")
-            }
+        Column(
+            verticalArrangement = Arrangement.Center,
+            horizontalAlignment = Alignment.CenterHorizontally,
+            modifier = Modifier.fillMaxSize()
         ) {
-            Text(text = "To DetailScreen")
-        }
-        Spacer(
-            modifier = Modifier.padding(8.dp)
-        )
-        Button(
-            modifier = Modifier.align(Alignment.End),
-            onClick = {
-                navController.navigate(Screen.DetailScreen2.route)
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                elevation = CardDefaults.cardElevation(defaultElevation = 8.dp),
+                colors = CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.surfaceContainer
+                )
+            ) {
+                Column(
+                    modifier = Modifier.padding(24.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Text(
+                        text = "Welcome to Navigation Demo",
+                        style = MaterialTheme.typography.headlineSmall,
+                        fontWeight = FontWeight.Bold,
+                        textAlign = TextAlign.Center,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+
+                    Spacer(modifier = Modifier.height(24.dp))
+
+                    OutlinedTextField(
+                        value = text,
+                        onValueChange = { text = it },
+                        label = { Text("Enter your name") },
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(12.dp)
+                    )
+
+                    Spacer(modifier = Modifier.height(32.dp))
+
+                    AnimatedButton(
+                        text = "Go to Detail Screen",
+                        onClick = { navController.navigate(Screen.DetailScreen.route + "/$text") },
+                        modifier = Modifier.fillMaxWidth()
+                    )
+
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    AnimatedButton(
+                        text = "Explore Screen 2",
+                        onClick = { navController.navigate(Screen.DetailScreen2.route) },
+                        modifier = Modifier.fillMaxWidth()
+                    )
+
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    AnimatedButton(
+                        text = "View Raw Data",
+                        onClick = { navController.navigate(Screen.DetailScreen3.route) },
+                        modifier = Modifier.fillMaxWidth()
+                    )
+
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    AnimatedButton(
+                        text = "Portfolio Dashboard",
+                        onClick = { navController.navigate(Screen.DetailScreen4.route) },
+                        modifier = Modifier.fillMaxWidth(),
+                        isPrimary = true
+                    )
+                }
             }
-        ) {
-            Text(text = "To DetailScreen2")
         }
-        Spacer(
-            modifier = Modifier.padding(8.dp)
+    }
+}
+
+@Composable
+fun AnimatedButton(
+    text: String,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    isPrimary: Boolean = false
+) {
+    Button(
+        onClick = onClick,
+        modifier = modifier.height(56.dp),
+        shape = RoundedCornerShape(16.dp),
+        colors = if (isPrimary) {
+            ButtonDefaults.buttonColors(
+                containerColor = MaterialTheme.colorScheme.primary,
+                contentColor = MaterialTheme.colorScheme.onPrimary
+            )
+        } else {
+            ButtonDefaults.buttonColors(
+                containerColor = MaterialTheme.colorScheme.secondaryContainer,
+                contentColor = MaterialTheme.colorScheme.onSecondaryContainer
+            )
+        },
+        elevation = ButtonDefaults.buttonElevation(
+            defaultElevation = 4.dp,
+            pressedElevation = 8.dp
         )
-        Button(
-            modifier = Modifier.align(Alignment.End),
-            onClick = {
-                navController.navigate(Screen.DetailScreen3.route)
-            }
-        ) {
-            Text(text = "To DetailScreen3")
-        }
-        Spacer(
-            modifier = Modifier.padding(8.dp)
+    ) {
+        Text(
+            text = text,
+            style = MaterialTheme.typography.titleMedium,
+            fontWeight = FontWeight.SemiBold
         )
-        Button(
-            modifier = Modifier.align(Alignment.End),
-            onClick = {
-                navController.navigate(Screen.DetailScreen4.route)
-            }
-        ) {
-            Text(text = "To DetailScreen4")
-        }
     }
 }
 
 @Composable
 fun DetailScreen(name: String?, navController: NavController) {
     Box(
-        contentAlignment = Alignment.Center,
-        modifier = Modifier.fillMaxSize()
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(24.dp)
     ) {
-        Column(
-            horizontalAlignment = Alignment.CenterHorizontally
+        Card(
+            modifier = Modifier.align(Alignment.Center),
+            elevation = CardDefaults.cardElevation(defaultElevation = 12.dp),
+            colors = CardDefaults.cardColors(
+                containerColor = MaterialTheme.colorScheme.primaryContainer
+            )
         ) {
-            Text(text = "Hello, $name")
-            Spacer(modifier = Modifier.padding(8.dp))
-            Button(
-                onClick = { navController.popBackStack() }
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                modifier = Modifier.padding(32.dp)
             ) {
-                Text("Back")
+                Icon(
+                    imageVector = Icons.Filled.Info,
+                    contentDescription = null,
+                    modifier = Modifier.size(64.dp),
+                    tint = MaterialTheme.colorScheme.primary
+                )
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                Text(
+                    text = "Hello, ${name ?: "Guest"}!",
+                    style = MaterialTheme.typography.headlineMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onPrimaryContainer
+                )
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                Text(
+                    text = "Welcome to the detail screen",
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.8f),
+                    textAlign = TextAlign.Center
+                )
+
+                Spacer(modifier = Modifier.height(24.dp))
+
+                Button(
+                    onClick = { navController.popBackStack() },
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.primary
+                    ),
+                    shape = RoundedCornerShape(12.dp)
+                ) {
+                    Text("Go Back", fontWeight = FontWeight.SemiBold)
+                }
             }
         }
     }
@@ -319,48 +423,147 @@ fun DetailScreen(name: String?, navController: NavController) {
 
 @Composable
 fun DetailScreen2(navController: NavController) {
-    Column(
+    LazyColumn(
         modifier = Modifier
             .fillMaxSize()
             .padding(16.dp),
-        verticalArrangement = Arrangement.spacedBy(16.dp),
-        horizontalAlignment = Alignment.CenterHorizontally
+        verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
-        Text(
-            text = "Welcome to Detail Screen 2",
-            style = MaterialTheme.typography.headlineMedium
-        )
+        item {
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                elevation = CardDefaults.cardElevation(defaultElevation = 6.dp),
+                colors = CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.primaryContainer
+                )
+            ) {
+                Column(
+                    modifier = Modifier.padding(20.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Icon(
+                        imageVector = Icons.Filled.List,
+                        contentDescription = null,
+                        modifier = Modifier.size(48.dp),
+                        tint = MaterialTheme.colorScheme.primary
+                    )
 
-        Card(
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            Text(
-                text = "This is a card component",
-                modifier = Modifier.padding(16.dp),
-                style = MaterialTheme.typography.bodyLarge
+                    Spacer(modifier = Modifier.height(12.dp))
+
+                    Text(
+                        text = "Detail Screen 2",
+                        style = MaterialTheme.typography.headlineMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onPrimaryContainer
+                    )
+
+                    Text(
+                        text = "Explore the features below",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.8f)
+                    )
+                }
+            }
+        }
+
+        item {
+            FeatureCard(
+                title = "Interactive Components",
+                description = "This screen showcases various UI components with improved visual design.",
+                color = MaterialTheme.colorScheme.secondaryContainer
             )
         }
 
-        Text(
-            text = "Simple text element",
-            style = MaterialTheme.typography.bodyMedium
-        )
-
-        Button(onClick = { }) {
-            Text("Sample Button")
+        item {
+            FeatureCard(
+                title = "Modern Design",
+                description = "Enhanced with material design principles and smooth animations.",
+                color = MaterialTheme.colorScheme.tertiaryContainer
+            )
         }
 
-        Text(
-            text = "Another text element for testing",
-            style = MaterialTheme.typography.bodySmall
-        )
+        item {
+            FeatureCard(
+                title = "Responsive Layout",
+                description = "Optimized for different screen sizes and orientations.",
+                color = MaterialTheme.colorScheme.errorContainer
+            )
+        }
 
-        Spacer(modifier = Modifier.weight(1f))
+        item {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                Button(
+                    onClick = { },
+                    modifier = Modifier.weight(1f),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.secondary
+                    ),
+                    shape = RoundedCornerShape(12.dp)
+                ) {
+                    Text("Action 1")
+                }
 
-        Button(
-            onClick = { navController.popBackStack() }
+                Button(
+                    onClick = { },
+                    modifier = Modifier.weight(1f),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.tertiary
+                    ),
+                    shape = RoundedCornerShape(12.dp)
+                ) {
+                    Text("Action 2")
+                }
+            }
+        }
+
+        item {
+            Spacer(modifier = Modifier.height(16.dp))
+
+            Button(
+                onClick = { navController.popBackStack() },
+                modifier = Modifier.fillMaxWidth(),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = MaterialTheme.colorScheme.primary
+                ),
+                shape = RoundedCornerShape(16.dp)
+            ) {
+                Text(
+                    "Back to Main",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.SemiBold
+                )
+            }
+        }
+    }
+}
+
+@Composable
+fun FeatureCard(
+    title: String,
+    description: String,
+    color: Color
+) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
+        colors = CardDefaults.cardColors(containerColor = color)
+    ) {
+        Column(
+            modifier = Modifier.padding(16.dp)
         ) {
-            Text("Back to Main")
+            Text(
+                text = title,
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.Bold
+            )
+            Spacer(modifier = Modifier.height(8.dp))
+            Text(
+                text = description,
+                style = MaterialTheme.typography.bodyMedium
+            )
         }
     }
 }
@@ -386,47 +589,146 @@ fun DetailScreen3(navController: NavController) {
         modifier = Modifier
             .fillMaxSize()
             .padding(16.dp),
-        verticalArrangement = Arrangement.spacedBy(16.dp),
-        horizontalAlignment = Alignment.CenterHorizontally
+        verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
-        Text(
-            text = "US Nuclear Energy Portfolio",
-            style = MaterialTheme.typography.headlineMedium
-        )
-
-        when {
-            isLoading -> {
-                CircularProgressIndicator()
-                Text("Loading data...")
-            }
-            errorMessage != null -> {
-                Text(
-                    text = errorMessage!!,
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.error
+        Card(
+            modifier = Modifier.fillMaxWidth(),
+            elevation = CardDefaults.cardElevation(defaultElevation = 6.dp),
+            colors = CardDefaults.cardColors(
+                containerColor = MaterialTheme.colorScheme.primaryContainer
+            )
+        ) {
+            Row(
+                modifier = Modifier.padding(20.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Icon(
+                    imageVector = Icons.Filled.Star,
+                    contentDescription = null,
+                    modifier = Modifier.size(32.dp),
+                    tint = MaterialTheme.colorScheme.primary
                 )
-            }
-            jsonData != null -> {
-                Card(
-                    modifier = Modifier.fillMaxWidth()
-                ) {
+
+                Spacer(modifier = Modifier.width(12.dp))
+
+                Column {
                     Text(
-                        text = jsonData!!,
-                        modifier = Modifier
-                            .padding(16.dp)
-                            .verticalScroll(rememberScrollState()),
-                        style = MaterialTheme.typography.bodySmall
+                        text = "Raw Data Viewer",
+                        style = MaterialTheme.typography.headlineSmall,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onPrimaryContainer
+                    )
+                    Text(
+                        text = "US Nuclear Energy Portfolio",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.8f)
                     )
                 }
             }
         }
 
-        Spacer(modifier = Modifier.weight(1f))
+        when {
+            isLoading -> {
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+                ) {
+                    Column(
+                        modifier = Modifier.padding(32.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(48.dp),
+                            strokeWidth = 4.dp
+                        )
+                        Spacer(modifier = Modifier.height(16.dp))
+                        Text(
+                            "Loading portfolio data...",
+                            style = MaterialTheme.typography.bodyLarge,
+                            textAlign = TextAlign.Center
+                        )
+                        Spacer(modifier = Modifier.height(8.dp))
+                        LinearProgressIndicator(
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                    }
+                }
+            }
+            errorMessage != null -> {
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.errorContainer
+                    )
+                ) {
+                    Column(
+                        modifier = Modifier.padding(20.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Text(
+                            text = "⚠️ Error",
+                            style = MaterialTheme.typography.titleLarge,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onErrorContainer
+                        )
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Text(
+                            text = errorMessage!!,
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onErrorContainer,
+                            textAlign = TextAlign.Center
+                        )
+                    }
+                }
+            }
+            jsonData != null -> {
+                Card(
+                    modifier = Modifier.weight(1f),
+                    elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+                ) {
+                    Column(
+                        modifier = Modifier.padding(16.dp)
+                    ) {
+                        Text(
+                            text = "JSON Response",
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold,
+                            modifier = Modifier.padding(bottom = 12.dp)
+                        )
+
+                        Surface(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .clip(RoundedCornerShape(8.dp)),
+                            color = MaterialTheme.colorScheme.surfaceVariant
+                        ) {
+                            Text(
+                                text = jsonData!!,
+                                modifier = Modifier
+                                    .padding(12.dp)
+                                    .verticalScroll(rememberScrollState()),
+                                style = MaterialTheme.typography.bodySmall,
+                                fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace
+                            )
+                        }
+                    }
+                }
+            }
+        }
 
         Button(
-            onClick = { navController.popBackStack() }
+            onClick = { navController.popBackStack() },
+            modifier = Modifier.fillMaxWidth(),
+            colors = ButtonDefaults.buttonColors(
+                containerColor = MaterialTheme.colorScheme.primary
+            ),
+            shape = RoundedCornerShape(16.dp)
         ) {
-            Text("Back to Main")
+            Text(
+                "Back to Main",
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.SemiBold
+            )
         }
     }
 }
@@ -453,101 +755,220 @@ fun DetailScreen4(navController: NavController) {
             .fillMaxSize()
             .padding(16.dp)
     ) {
-        Text(
-            text = "Nuclear Energy Portfolio",
-            style = MaterialTheme.typography.headlineMedium,
-            modifier = Modifier.padding(bottom = 16.dp)
-        )
+        Card(
+            modifier = Modifier.fillMaxWidth(),
+            elevation = CardDefaults.cardElevation(defaultElevation = 8.dp),
+            colors = CardDefaults.cardColors(
+                containerColor = MaterialTheme.colorScheme.primaryContainer
+            )
+        ) {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(
+                        Brush.horizontalGradient(
+                            colors = listOf(
+                                MaterialTheme.colorScheme.primary.copy(alpha = 0.1f),
+                                MaterialTheme.colorScheme.secondary.copy(alpha = 0.1f)
+                            )
+                        )
+                    )
+            ) {
+                Row(
+                    modifier = Modifier.padding(20.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Icon(
+                        imageVector = Icons.Filled.ThumbUp,
+                        contentDescription = null,
+                        modifier = Modifier.size(40.dp),
+                        tint = MaterialTheme.colorScheme.primary
+                    )
+
+                    Spacer(modifier = Modifier.width(16.dp))
+
+                    Column {
+                        Text(
+                            text = "Portfolio Dashboard",
+                            style = MaterialTheme.typography.headlineMedium,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onPrimaryContainer
+                        )
+                        Text(
+                            text = "Nuclear Energy Investments",
+                            style = MaterialTheme.typography.bodyLarge,
+                            color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.8f)
+                        )
+                    }
+                }
+            }
+        }
+
+        Spacer(modifier = Modifier.height(16.dp))
 
         when {
             isLoading -> {
-                Box(
+                Card(
                     modifier = Modifier.fillMaxSize(),
-                    contentAlignment = Alignment.Center
+                    elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
                 ) {
-                    Column(
-                        horizontalAlignment = Alignment.CenterHorizontally
+                    Box(
+                        modifier = Modifier.fillMaxSize(),
+                        contentAlignment = Alignment.Center
                     ) {
-                        CircularProgressIndicator()
-                        Spacer(modifier = Modifier.height(16.dp))
-                        Text("Loading portfolio data...")
+                        Column(
+                            horizontalAlignment = Alignment.CenterHorizontally
+                        ) {
+                            CircularProgressIndicator(
+                                modifier = Modifier.size(56.dp),
+                                strokeWidth = 5.dp,
+                                color = MaterialTheme.colorScheme.primary
+                            )
+                            Spacer(modifier = Modifier.height(24.dp))
+                            Text(
+                                "Loading portfolio data...",
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.Medium
+                            )
+                            Spacer(modifier = Modifier.height(12.dp))
+                            LinearProgressIndicator(
+                                modifier = Modifier.width(200.dp),
+                                color = MaterialTheme.colorScheme.primary
+                            )
+                        }
                     }
                 }
             }
             errorMessage != null -> {
-                Text(
-                    text = errorMessage!!,
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.error
-                )
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.errorContainer
+                    )
+                ) {
+                    Column(
+                        modifier = Modifier.padding(24.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Text(
+                            text = "❌ Error Loading Data",
+                            style = MaterialTheme.typography.titleLarge,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onErrorContainer
+                        )
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Text(
+                            text = errorMessage!!,
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onErrorContainer,
+                            textAlign = TextAlign.Center
+                        )
+                    }
+                }
             }
             portfolioData != null -> {
                 LazyColumn(
-                    verticalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalArrangement = Arrangement.spacedBy(12.dp),
                     modifier = Modifier.weight(1f)
                 ) {
                     item {
                         Card(
                             modifier = Modifier.fillMaxWidth(),
+                            elevation = CardDefaults.cardElevation(defaultElevation = 6.dp),
                             colors = CardDefaults.cardColors(
-                                containerColor = MaterialTheme.colorScheme.primaryContainer
+                                containerColor = MaterialTheme.colorScheme.secondaryContainer
                             )
                         ) {
                             Column(
-                                modifier = Modifier.padding(16.dp)
+                                modifier = Modifier.padding(20.dp)
                             ) {
                                 Text(
                                     text = portfolioData!!.portfolioName,
-                                    style = MaterialTheme.typography.titleLarge,
-                                    fontWeight = FontWeight.Bold
+                                    style = MaterialTheme.typography.headlineSmall,
+                                    fontWeight = FontWeight.Bold,
+                                    color = MaterialTheme.colorScheme.onSecondaryContainer
                                 )
-                                Text(
-                                    text = "Last updated: ${portfolioData!!.timestamp.split('T')[0]}",
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                                )
+                                Spacer(modifier = Modifier.height(8.dp))
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Text(
+                                        text = "📊 ",
+                                        style = MaterialTheme.typography.bodyMedium
+                                    )
+                                    Text(
+                                        text = "Last updated: ${portfolioData!!.timestamp.split('T')[0]}",
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        color = MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.8f)
+                                    )
+                                }
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Text(
+                                        text = "📈 ",
+                                        style = MaterialTheme.typography.bodyMedium
+                                    )
+                                    Text(
+                                        text = "${portfolioData!!.data.size} positions tracked",
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        color = MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.8f)
+                                    )
+                                }
                             }
                         }
                     }
 
                     items(portfolioData!!.data) { stock ->
-                        StockCard(stock = stock)
+                        EnhancedStockCard(stock = stock)
                     }
                 }
             }
         }
 
+        Spacer(modifier = Modifier.height(16.dp))
+
         Button(
             onClick = { navController.popBackStack() },
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(top = 16.dp)
+            modifier = Modifier.fillMaxWidth(),
+            colors = ButtonDefaults.buttonColors(
+                containerColor = MaterialTheme.colorScheme.primary
+            ),
+            shape = RoundedCornerShape(16.dp),
+            elevation = ButtonDefaults.buttonElevation(
+                defaultElevation = 6.dp
+            )
         ) {
-            Text("Back to Main")
+            Text(
+                "Back to Main",
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.SemiBold,
+                modifier = Modifier.padding(vertical = 4.dp)
+            )
         }
     }
 }
 
 @Composable
-fun StockCard(stock: StockData) {
-    val profitColor = if (stock.totalProfit.replace("%", "").toDoubleOrNull()?.let { it >= 0 } == true) {
-        Color(0xFF4CAF50) // Green for profit
-    } else {
-        Color(0xFFF44336) // Red for loss
-    }
+fun EnhancedStockCard(stock: StockData) {
+    val profitValue = stock.totalProfit.replace("%", "").toDoubleOrNull() ?: 0.0
+    val dailyChangeValue = stock.dailyChange.replace("%", "").toDoubleOrNull() ?: 0.0
 
-    val dailyChangeColor = if (stock.dailyChange.replace("%", "").toDoubleOrNull()?.let { it >= 0 } == true) {
-        Color(0xFF4CAF50) // Green for positive change
-    } else {
-        Color(0xFFF44336) // Red for negative change
-    }
+    val profitColor = if (profitValue >= 0) Color(0xFF4CAF50) else Color(0xFFF44336)
+    val dailyChangeColor = if (dailyChangeValue >= 0) Color(0xFF4CAF50) else Color(0xFFF44336)
+
+    val profitIcon = if (profitValue >= 0) "📈" else "📉"
+    val changeIcon = if (dailyChangeValue >= 0) "⬆️" else "⬇️"
 
     Card(
         modifier = Modifier.fillMaxWidth(),
-        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+        elevation = CardDefaults.cardElevation(defaultElevation = 6.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surfaceContainer
+        )
     ) {
         Column(
-            modifier = Modifier.padding(16.dp)
+            modifier = Modifier.padding(20.dp)
         ) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -559,73 +980,118 @@ fun StockCard(stock: StockData) {
                 ) {
                     Text(
                         text = stock.ticker,
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Bold
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.primary
                     )
                     Text(
                         text = stock.companyName,
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                        style = MaterialTheme.typography.bodyLarge,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.padding(top = 4.dp)
                     )
                 }
 
                 Column(
                     horizontalAlignment = Alignment.End
                 ) {
-                    Text(
-                        text = stock.totalProfit,
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Bold,
-                        color = profitColor
-                    )
-                    Text(
-                        text = stock.dailyChange,
-                        style = MaterialTheme.typography.bodySmall,
-                        color = dailyChangeColor
-                    )
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = profitIcon,
+                            style = MaterialTheme.typography.bodyMedium
+                        )
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text(
+                            text = stock.totalProfit,
+                            style = MaterialTheme.typography.titleLarge,
+                            fontWeight = FontWeight.Bold,
+                            color = profitColor
+                        )
+                    }
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier.padding(top = 4.dp)
+                    ) {
+                        Text(
+                            text = changeIcon,
+                            style = MaterialTheme.typography.bodySmall
+                        )
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text(
+                            text = stock.dailyChange,
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = dailyChangeColor,
+                            fontWeight = FontWeight.Medium
+                        )
+                    }
                 }
             }
 
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(16.dp))
 
-            Row(
+            Surface(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween
+                color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
+                shape = RoundedCornerShape(12.dp)
             ) {
-                Column {
-                    Text(
-                        text = "Entry Price",
-                        style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                    Text(
-                        text = "$${stock.entryPrice}",
-                        style = MaterialTheme.typography.bodyMedium
-                    )
-                }
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Text(
+                            text = "Entry Price",
+                            style = MaterialTheme.typography.labelMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            fontWeight = FontWeight.Medium
+                        )
+                        Text(
+                            text = "$${stock.entryPrice}",
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold,
+                            modifier = Modifier.padding(top = 4.dp)
+                        )
+                    }
 
-                Column {
-                    Text(
-                        text = "Latest Close",
-                        style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                    Text(
-                        text = "$${stock.latestClose}",
-                        style = MaterialTheme.typography.bodyMedium
-                    )
-                }
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Text(
+                            text = "Current Price",
+                            style = MaterialTheme.typography.labelMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            fontWeight = FontWeight.Medium
+                        )
+                        Text(
+                            text = "$${stock.latestClose}",
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold,
+                            modifier = Modifier.padding(top = 4.dp)
+                        )
+                    }
 
-                Column {
-                    Text(
-                        text = "Entry Date",
-                        style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                    Text(
-                        text = stock.entryDate,
-                        style = MaterialTheme.typography.bodyMedium
-                    )
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Text(
+                            text = "Entry Date",
+                            style = MaterialTheme.typography.labelMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            fontWeight = FontWeight.Medium
+                        )
+                        Text(
+                            text = stock.entryDate,
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold,
+                            modifier = Modifier.padding(top = 4.dp)
+                        )
+                    }
                 }
             }
         }
